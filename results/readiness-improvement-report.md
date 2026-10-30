@@ -12,7 +12,7 @@
 
 Targets from the exercise: AFTER >= 80 and delta >= +15. Both are met. Details are in `REPOSITORY_READINESS_AUDIT.md`, `results/before-agent-run.md` and `results/after-agent-run.md`.
 
-Honest reading: both runs passed, so the improvements did not change the outcome. They changed how much the agent had to infer, the definition of done it used, and the quality of the evidence it left. See Threats to Validity before drawing stronger conclusions.
+Both runs passed, so the improvements did not change the outcome. They changed how much the agent had to infer, which definition of done it used and how good the evidence it left was. Read Threats to Validity before drawing stronger conclusions.
 
 ## Changes Made
 
@@ -83,9 +83,9 @@ One correction made during the work: the first version of the rule said "never c
 
 ## Impact Analysis
 
-For the agent: context to understand (`AGENTS.md`, `REQUIREMENTS.md`, `SPEC.md`), discoverability to find things (`docs/REPO_MAP.md`), architecture to limit changes (`ARCHITECTURE.md`), tools to execute (`scripts/verify_repo.sh`), tests and CI to check (27 tests, workflow), guardrails to prevent (two scripts), and evidence to decide (Definition of Done and report format).
+The agent now finds what it needs in a fixed order: `AGENTS.md`, `REQUIREMENTS.md` and `SPEC.md` for what to build, `docs/REPO_MAP.md` for where, `ARCHITECTURE.md` for the limits, and `scripts/verify_repo.sh` for how to check. Two scripts block the riskiest edits, and the Definition of Done says what evidence to report.
 
-For a new human teammate: the same documents answer "where do I start, how do I run it, what may I not touch, when am I done" without asking anyone. The verify command and the CI workflow are the same thing for them as for the agent.
+A new teammate gets the same answers to "where do I start, how do I run it, what should I not touch, when am I done" without asking anyone. They run the same verify command and the same CI workflow as the agent.
 
 ## Threats to Validity
 
@@ -110,18 +110,56 @@ For a new human teammate: the same documents answer "where do I start, how do I 
 
 ## Reflexión individual (borrador)
 
-Borrador escrito por la IA a partir de la evidencia de este repositorio. Debe ser revisado y reescrito por la persona que entrega el ADA con su propio criterio.
+Borrador basado en la evidencia de este repositorio. Léelo y cámbialo por lo que tú pienses antes de entregarlo.
 
-1. **¿Cuál fue el principal obstáculo para el agente en la ejecución BEFORE?** No hubo un bloqueo: el agente terminó con PASS. La fricción fue que tuvo que decidir solo qué documento mandaba (`SPEC.md` decía que REQ-003 estaba pendiente, pero el código ya lo cumplía) y qué significaba "terminado".
-2. **¿Qué información tuvo que inferir que un desarrollador experimentado ya conocía?** Las convenciones (`ValueError`, redondeo a 2 decimales, funciones puras), dónde van el código y los tests, qué archivos no debía tocar y que el estado real de REQ-003 era "implementado". Están en `results/implicit-knowledge.md` (8 elementos).
-3. **¿Qué mejora produjo el mayor impacto y por qué?** No se puede aislar: todas las mejoras se aplicaron juntas y hay una sola corrida por condición. Lo observable es que el agente AFTER siguió la cadena `AGENTS.md` -> `REPO_MAP` -> `verify_repo.sh`, así que sospecho que `AGENTS.md` más el comando único de verificación fueron las más influyentes, pero es una hipótesis.
-4. **¿Qué información pertenece en `AGENTS.md` y cuál NO debería vivir ahí?** Pertenecen el orden de lectura, las fuentes de verdad, los comandos, las reglas de cambio, las condiciones de parada y la Definition of Done. No deben vivir ahí los requisitos, el detalle de la arquitectura ni los criterios de aceptación: solo se enlazan.
-5. **¿Qué regla convertiste en software en lugar de dejarla como instrucción?** Las rutas protegidas y los archivos prohibidos (`check_protected_paths.py`), la existencia de documentos y enlaces, la consistencia REQ entre `REQUIREMENTS.md` y `SPEC.md`, y la búsqueda de secretos (`check_repo_contract.py`). Quedan solo como texto las convenciones de código.
-6. **¿Qué diferencia observaste entre "más contexto" y "mejor contexto"?** El AFTER leyó 18 archivos contra 6 del BEFORE, así que hubo más contexto, pero el valor vino de que cada archivo tenía un papel único y estaba enlazado desde la entrada, y de que un script lo verifica. Los documentos nuevos son cortos y no se repiten entre sí.
-7. **¿Qué riesgo aparece cuando `CLAUDE.md`/`GEMINI.md`/copilot instructions duplican información del proyecto?** Se crea una segunda fuente de verdad que se desactualiza y que puede contradecir a la primera. Por eso `CLAUDE.md` solo dice "sigue `AGENTS.md`".
-8. **¿Qué checks comparten ahora el agente, el desarrollador humano y CI?** Los cuatro pasos de `scripts/verify_repo.sh`: tests, chequeo de sintaxis, contrato del repositorio y rutas protegidas. El workflow de GitHub Actions ejecuta ese mismo script y ya corrió con éxito en GitHub para eventos push; falta probar la ruta de pull request.
-9. **¿Qué parte del proceso sigue requiriendo decisión humana?** Cambiar o agregar requisitos, tocar rutas protegidas o el CI, cambiar la arquitectura (agregar I/O, dependencias, paquetes), acciones destructivas, y decidir si las reglas ambiguas (por ejemplo, actualizar `TASKS.md`) son aceptables.
-10. **¿Qué evidencia demuestra que el AFTER es realmente mejor?** El agente AFTER validó con cinco tipos de verificación (cuatro en un solo comando) contra dos del BEFORE, dejó `SPEC.md`, `TASKS.md` y `REPO_MAP` consistentes con el cambio, y usó el mismo script que usará CI. Los guardrails se demostraron con 8 casos. Es evidencia de menor incertidumbre y mejor trazabilidad, no de mayor éxito: ambos fueron PASS.
-11. **¿Qué mejora para el agente también beneficia a un desarrollador que entra por primera vez?** `REPO_MAP`, `AGENTS.md` (comandos y reglas) y `verify_repo.sh`: responden dónde empezar, cómo probar y qué no tocar sin preguntar a nadie.
-12. **¿Qué variable no controlada podría afectar la comparación BEFORE/AFTER?** La variabilidad propia del modelo (una sola corrida por condición), que ambos agentes fueran subagentes y no una sesión interactiva, que el modelo exacto no se confirmó, y que yo diseñé tarea, mejoras y puntaje.
-13. **¿Qué elementos de este ADA conservarás para tu proyecto final?** La estructura `AGENTS.md` + adaptadores, `REPO_MAP`, un único `verify_repo.sh` compartido con CI, al menos un guardrail ejecutable con pruebas negativas, y el protocolo de baseline congelado con un clon aislado para cada corrida.
+1. ¿Cuál fue el principal obstáculo para el agente en la ejecución BEFORE?
+
+Ninguno que lo detuviera: terminó con PASS. Lo que le costó fue decidir qué documento mandaba, porque `SPEC.md` decía que REQ-003 estaba pendiente y el código ya lo cumplía, y definir por su cuenta qué significaba "terminado".
+
+2. ¿Qué información tuvo que inferir que un desarrollador experimentado ya conocía?
+
+Las convenciones (`ValueError`, redondeo a 2 decimales, funciones puras), dónde van el código y los tests, qué archivos no tocar y que REQ-003 ya estaba hecho. Son los 8 puntos de `results/implicit-knowledge.md`.
+
+3. ¿Qué mejora produjo el mayor impacto y por qué?
+
+No puedo separarlo: las mejoras se aplicaron todas juntas y hay una sola corrida por condición. Lo que se vio es que el agente AFTER siguió `AGENTS.md`, luego `REPO_MAP` y al final `verify_repo.sh`. Creo que pesaron más `AGENTS.md` y el comando único de verificación, pero es una hipótesis.
+
+4. ¿Qué información pertenece en `AGENTS.md` y cuál NO debería vivir ahí?
+
+Pertenecen el orden de lectura, las fuentes de verdad, los comandos, las reglas de cambio, las condiciones de parada y la definición de terminado. Los requisitos, el detalle de la arquitectura y los criterios de aceptación no van ahí; solo se enlazan.
+
+5. ¿Qué regla convertiste en software en lugar de dejarla como instrucción?
+
+Las rutas protegidas y los archivos prohibidos (`check_protected_paths.py`), que los documentos citen rutas que existen, que los REQ coincidan entre `REQUIREMENTS.md` y `SPEC.md`, y la búsqueda de secretos (`check_repo_contract.py`). Las convenciones de código siguen siendo solo texto.
+
+6. ¿Qué diferencia observaste entre "más contexto" y "mejor contexto"?
+
+El AFTER leyó 18 archivos y el BEFORE 6, así que hubo más contexto. Lo que parece contar es que cada archivo tiene un papel distinto, se llega a él desde `AGENTS.md` y un script comprueba que los enlaces existen.
+
+7. ¿Qué riesgo aparece cuando `CLAUDE.md`/`GEMINI.md`/copilot instructions duplican información del proyecto?
+
+Aparece una segunda fuente de verdad que se desactualiza y acaba contradiciendo a la primera. Por eso `CLAUDE.md` solo remite a `AGENTS.md`.
+
+8. ¿Qué checks comparten ahora el agente, el desarrollador humano y CI?
+
+Los cuatro pasos de `scripts/verify_repo.sh`: tests, chequeo de sintaxis, contrato del repositorio y rutas protegidas. Los corren el agente, la persona y el workflow de GitHub Actions. El workflow ya pasó en GitHub con eventos push; la ruta de pull request no se ha probado.
+
+9. ¿Qué parte del proceso sigue requiriendo decisión humana?
+
+Cambiar o agregar requisitos, tocar rutas protegidas o el CI, cambiar la arquitectura (I/O, dependencias, paquetes) y cualquier acción destructiva. También alguien tiene que decidir las reglas ambiguas, como si el trabajo de una feature debe actualizar `TASKS.md`.
+
+10. ¿Qué evidencia demuestra que el AFTER es realmente mejor?
+
+El agente AFTER validó con cinco tipos de verificación (cuatro con un solo comando) contra dos del BEFORE, dejó `SPEC.md`, `TASKS.md` y `REPO_MAP` al día con el cambio y usó el mismo script que usa el CI. Los guardrails se probaron con 8 casos. Eso muestra menos incertidumbre y mejor trazabilidad. No muestra más éxito: los dos terminaron en PASS.
+
+11. ¿Qué mejora para el agente también beneficia a un desarrollador que entra por primera vez?
+
+`REPO_MAP`, los comandos y reglas de `AGENTS.md` y `verify_repo.sh`. Responden dónde empezar, cómo probar y qué no tocar sin preguntarle a nadie.
+
+12. ¿Qué variable no controlada podría afectar la comparación BEFORE/AFTER?
+
+La variación propia del modelo, porque hay una sola corrida por condición. Además, los dos agentes fueron subagentes y no una sesión interactiva, no se confirmó la versión exacta del modelo, y la misma sesión de Claude diseñó la tarea, las mejoras y el puntaje.
+
+13. ¿Qué elementos de este ADA conservarás para tu proyecto final?
+
+La estructura de `AGENTS.md` con adaptadores, `REPO_MAP`, un solo `verify_repo.sh` compartido con el CI, al menos un guardrail con pruebas que fallen a propósito, y el protocolo de baseline congelado con un clon aislado para cada corrida.
