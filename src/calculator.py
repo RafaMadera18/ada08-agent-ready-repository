@@ -25,3 +25,16 @@ def apply_tax(amount: float, tax_rate: float) -> float:
     if tax_rate < 0:
         raise ValueError("Tax rate cannot be negative")
     return round(amount * (1.0 + tax_rate), 2)
+
+
+def calculate_order_total(
+    prices: list[float], discount_percent: float = 0.0, tax_rate: float = 0.0
+) -> float:
+    """Calculate the final order total.
+
+    The discount (0-100) is applied to the subtotal first; the tax rate is then
+    applied to the discounted amount.
+    """
+    subtotal = calculate_subtotal(prices)
+    discounted = apply_discount(subtotal, discount_percent)
+    return apply_tax(discounted, tax_rate)
