@@ -49,12 +49,12 @@ To verify: that each IK item maps to an improvement in the report.
 
 ## Entry 8 - Shared checks and CI
 
-AI contribution: Made `scripts/verify_repo.sh` the only definition of "verified" and made the GitHub Actions workflow call it, with no duplicated logic. The workflow has not run on GitHub because the working copy has no remote.
-Human decision: None.
-To verify: push the branch to a GitHub repository and confirm the workflow passes.
+AI contribution: Made `scripts/verify_repo.sh` the only definition of "verified" and made the GitHub Actions workflow call it, with no duplicated logic. The working copy had no remote, so the workflow could not run at first. After the student agreed, the assistant created the public repository `RafaMadera18/ada08-agent-ready-repository`, pushed `main` (the final branch), `ada08/before`, `ada08/after`, `ada08/improve` and the tag, and the workflow passed on all three branches that contain it.
+Human decision: The student approved publishing and chose a public repository with the evidence branches included.
+To verify: the three passing runs in the Actions tab; open a pull request to exercise the base-branch comparison, which has not run yet.
 
 ## Entry 9 - Final evaluation and remaining human work
 
-AI contribution: Scored AFTER at 86/100 (+56), with a caveat that the improvements and the score come from the same author, and listed what still needs a human: no real linter, no automatic AC-to-test check, no agent hooks, an unclear rule about updating `TASKS.md` and `docs/REPO_MAP.md`, the unexecuted workflow, and the single run per condition. The reflection answers in the improvement report are a draft for the student to rewrite.
+AI contribution: Scored AFTER at 86/100 (+56), with a caveat that the improvements and the score come from the same author, and listed what still needs a human: no real linter, no automatic AC-to-test check, no agent hooks, an unclear rule about updating `TASKS.md` and `docs/REPO_MAP.md`, the untested pull-request path of the workflow, and the single run per condition. The reflection answers in the improvement report are a draft for the student to rewrite.
 Human decision: Pending.
 To verify: whether to accept 86/100 or lower some rows; and replace the draft reflection with the student's own.

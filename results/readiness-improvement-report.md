@@ -70,7 +70,7 @@ Evidence: 13 tests pass; guardrail demo cases 4, 5 and 6 show the contract check
 Category: CI Check
 Problem: Validation depended on whoever ran the agent.
 Change: Added `.github/workflows/verify.yml`. It runs `bash scripts/verify_repo.sh` and nothing else. On pull requests it compares against the base branch for the protected-path check.
-Evidence: The workflow file is in the repository. It has not been executed on GitHub, because this working copy has no remote. That is stated as a gap below.
+Evidence: After the audit and the AFTER run, the repository was pushed to GitHub and the workflow ran successfully on `main`, `ada08/after` and `ada08/improve` (Actions runs 40979418667, 40979418907 and 40979420758 in `RafaMadera18/ada08-agent-ready-repository`). The scores in the audit were not changed after this, because they were assigned before the first remote run.
 
 ### Improvement I-09
 
@@ -101,7 +101,7 @@ For a new human teammate: the same documents answer "where do I start, how do I 
 
 ## Remaining Gaps
 
-- The workflow has not run on GitHub (no remote).
+- The workflow only ran for push events. The pull-request path, which compares against the base branch for the protected-path check, has not been exercised.
 - "Lint" is a syntax check. No real linter is configured, to avoid adding a dependency without justification.
 - Purity of `src/calculator.py` and the AC-to-test mapping are documented but not checked automatically.
 - No agent-side hook or permission settings; protected paths are checked after the fact, not before the edit.
@@ -119,7 +119,7 @@ Borrador escrito por la IA a partir de la evidencia de este repositorio. Debe se
 5. **¿Qué regla convertiste en software en lugar de dejarla como instrucción?** Las rutas protegidas y los archivos prohibidos (`check_protected_paths.py`), la existencia de documentos y enlaces, la consistencia REQ entre `REQUIREMENTS.md` y `SPEC.md`, y la búsqueda de secretos (`check_repo_contract.py`). Quedan solo como texto las convenciones de código.
 6. **¿Qué diferencia observaste entre "más contexto" y "mejor contexto"?** El AFTER leyó 18 archivos contra 6 del BEFORE, así que hubo más contexto, pero el valor vino de que cada archivo tenía un papel único y estaba enlazado desde la entrada, y de que un script lo verifica. Los documentos nuevos son cortos y no se repiten entre sí.
 7. **¿Qué riesgo aparece cuando `CLAUDE.md`/`GEMINI.md`/copilot instructions duplican información del proyecto?** Se crea una segunda fuente de verdad que se desactualiza y que puede contradecir a la primera. Por eso `CLAUDE.md` solo dice "sigue `AGENTS.md`".
-8. **¿Qué checks comparten ahora el agente, el desarrollador humano y CI?** Los cuatro pasos de `scripts/verify_repo.sh`: tests, chequeo de sintaxis, contrato del repositorio y rutas protegidas. El workflow de GitHub Actions ejecuta ese mismo script; falta ejecutarlo en GitHub.
+8. **¿Qué checks comparten ahora el agente, el desarrollador humano y CI?** Los cuatro pasos de `scripts/verify_repo.sh`: tests, chequeo de sintaxis, contrato del repositorio y rutas protegidas. El workflow de GitHub Actions ejecuta ese mismo script y ya corrió con éxito en GitHub para eventos push; falta probar la ruta de pull request.
 9. **¿Qué parte del proceso sigue requiriendo decisión humana?** Cambiar o agregar requisitos, tocar rutas protegidas o el CI, cambiar la arquitectura (agregar I/O, dependencias, paquetes), acciones destructivas, y decidir si las reglas ambiguas (por ejemplo, actualizar `TASKS.md`) son aceptables.
 10. **¿Qué evidencia demuestra que el AFTER es realmente mejor?** El agente AFTER validó con cinco tipos de verificación (cuatro en un solo comando) contra dos del BEFORE, dejó `SPEC.md`, `TASKS.md` y `REPO_MAP` consistentes con el cambio, y usó el mismo script que usará CI. Los guardrails se demostraron con 8 casos. Es evidencia de menor incertidumbre y mejor trazabilidad, no de mayor éxito: ambos fueron PASS.
 11. **¿Qué mejora para el agente también beneficia a un desarrollador que entra por primera vez?** `REPO_MAP`, `AGENTS.md` (comandos y reglas) y `verify_repo.sh`: responden dónde empezar, cómo probar y qué no tocar sin preguntar a nadie.

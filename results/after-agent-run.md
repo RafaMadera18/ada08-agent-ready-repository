@@ -59,7 +59,7 @@ PASS
 | Qualitative observation | The agent had to infer conventions, resolve a stale `SPEC.md` by itself, and invent its own definition of done. It left docs unchanged. | The agent read the instruction chain in the order given, used the official verify command, followed the stated conventions, and kept the docs consistent with the change. |
 | Discoverability | Found the relevant files by listing the tree and reading 6 files. The test command came from `README.md`, the rest was inferred. | Found everything through `AGENTS.md` -> `docs/REPO_MAP.md`. It read 18 files, all of them named in those entry documents. |
 | Implicit Knowledge | 8 items in `results/implicit-knowledge.md` that the agent had to infer. | The 8 items are written in `AGENTS.md`, `ARCHITECTURE.md`, `SPEC.md`, `docs/REPO_MAP.md` and `.gitattributes`, and 5 of them are checked by scripts. |
-| CI / shared checks | None. | The same `scripts/verify_repo.sh` is run by the agent locally and by `.github/workflows/verify.yml` (workflow not yet executed on GitHub). |
+| CI / shared checks | None. | The same `scripts/verify_repo.sh` is run by the agent locally and by `.github/workflows/verify.yml` (the workflow ran successfully on GitHub after this run). |
 
 ## Reviewer Notes
 

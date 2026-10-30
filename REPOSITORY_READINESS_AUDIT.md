@@ -46,10 +46,10 @@ DELTA: AFTER - BEFORE = 86 - 30 = +56 points
 
 Why not 5 in the remaining dimensions:
 
-- Build / Run / Test: the GitHub Actions workflow has not run on GitHub yet because this repository has no remote. Lint is a syntax check only, there is no real linter.
+- Build / Run / Test: lint is a syntax check only, there is no real linter. (At audit time the GitHub Actions workflow had not run because there was no remote; it was run afterwards and passed. The score was not changed.)
 - Architecture Boundaries: purity of `src/calculator.py` is documented but not checked by a script.
 - Requirements & Traceability: the AC-to-test table is maintained by hand and is not verified automatically.
-- Automation & Guardrails: no agent-side hook is configured, and CI has not been run remotely.
+- Automation & Guardrails: no agent-side hook is configured, and the pull-request path of CI has not been exercised.
 - Testability & Evidence: no coverage measurement, and the evidence report is written by the person running the process.
 - Safety & Permissions: the secret scan only knows a handful of patterns, and no agent permission settings are provided.
 
