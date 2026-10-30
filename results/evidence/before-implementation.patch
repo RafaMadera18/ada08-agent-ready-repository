@@ -1,0 +1,71 @@
+﻿diff --git a/src/calculator.py b/src/calculator.py
+index 3d5a498..bda27c9 100644
+--- a/src/calculator.py
++++ b/src/calculator.py
+@@ -25,3 +25,18 @@ def apply_tax(amount: float, tax_rate: float) -> float:
+     if tax_rate < 0:
+         raise ValueError("Tax rate cannot be negative")
+     return round(amount * (1.0 + tax_rate), 2)
++
++
++def calculate_order_total(
++    prices: list[float],
++    discount_percent: float = 0.0,
++    tax_rate: float = 0.0,
++) -> float:
++    """Calculate the final order total.
++
++    The discount percentage (0-100) is applied to the subtotal before the
++    tax rate is applied. Raises ValueError on invalid inputs.
++    """
++    subtotal = calculate_subtotal(prices)
++    discounted = apply_discount(subtotal, discount_percent)
++    return apply_tax(discounted, tax_rate)
+diff --git a/tests/test_calculator.py b/tests/test_calculator.py
+index 1980526..93e51de 100644
+--- a/tests/test_calculator.py
++++ b/tests/test_calculator.py
+@@ -1,5 +1,10 @@
+ import unittest
+-from src.calculator import calculate_subtotal, apply_discount, apply_tax
++from src.calculator import (
++    calculate_subtotal,
++    apply_discount,
++    apply_tax,
++    calculate_order_total,
++)
+ 
+ 
+ class TestCalculator(unittest.TestCase):
+@@ -35,6 +40,31 @@ class TestCalculator(unittest.TestCase):
+         with self.assertRaises(ValueError):
+             apply_tax(100.0, -0.16)
+ 
++    def test_calculate_order_total_discount_and_tax(self):
++        self.assertEqual(calculate_order_total([100.0, 50.0], 10.0, 0.16), 156.6)
++
++    def test_calculate_order_total_defaults(self):
++        self.assertEqual(calculate_order_total([10.5, 20.0, 5.25]), 35.75)
++        self.assertEqual(calculate_order_total([100.0], discount_percent=10.0), 90.0)
++        self.assertEqual(calculate_order_total([100.0], tax_rate=0.16), 116.0)
++
++    def test_calculate_order_total_empty(self):
++        self.assertEqual(calculate_order_total([]), 0.0)
++        self.assertEqual(calculate_order_total([], 10.0, 0.16), 0.0)
++
++    def test_calculate_order_total_full_discount(self):
++        self.assertEqual(calculate_order_total([100.0], 100.0, 0.16), 0.0)
++
++    def test_calculate_order_total_invalid(self):
++        with self.assertRaises(ValueError):
++            calculate_order_total([10.0, -5.0])
++        with self.assertRaises(ValueError):
++            calculate_order_total([100.0], -5.0)
++        with self.assertRaises(ValueError):
++            calculate_order_total([100.0], 105.0)
++        with self.assertRaises(ValueError):
++            calculate_order_total([100.0], 10.0, -0.16)
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
