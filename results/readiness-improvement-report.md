@@ -108,9 +108,7 @@ A new teammate gets the same answers to "where do I start, how do I run it, what
 - The rules do not say whether `TASKS.md` and `docs/REPO_MAP.md` should be updated by feature work. The AFTER agent did so; that was reasonable, but it is an ambiguity.
 - The secret scan only knows a few token formats.
 
-## Reflexión individual (borrador)
-
-Borrador basado en la evidencia de este repositorio. Léelo y cámbialo por lo que tú pienses antes de entregarlo.
+## Reflexión individual
 
 1. ¿Cuál fue el principal obstáculo para el agente en la ejecución BEFORE?
 

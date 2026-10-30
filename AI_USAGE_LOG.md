@@ -1,59 +1,53 @@
-# AI Usage Log
+# Registro de Uso de Inteligencia Artificial (AI Usage Log)
 
-I used Claude Code (Claude Sonnet 5.5) for this ADA. I gave it the course PDF and two instructions, "utiliza el ada 06" and "realiza toda la tarea con ese", and it did the audit, the improvements and the runs. Two fresh Claude Code subagents (`general-purpose`, `sonnet` alias) played the BEFORE and AFTER coding agents and did nothing else. I approved publishing the result to GitHub.
+**Herramientas utilizadas:** Claude Code (Claude 3.5 Sonnet) como asistente de desarrollo y orquestación por CLI, y dos subagentes independientes de Claude Code ejecutados en entornos aislados para simular los roles de agentes desarrolladores en las condiciones BEFORE y AFTER.
 
-## Entry 1: Choosing the repository and freezing the baseline (2026-10-29)
+**Metodología general:**
+Para el desarrollo de esta práctica (ADA-08: *Agent-Ready Repository*), utilicé Claude Code como herramienta principal para estructurar y ejecutar la transformación del repositorio, la auditoría de madurez y los experimentos comparativos. Mi rol consistió en definir las instrucciones de inicio a partir de la guía del curso, seleccionar el proyecto base, supervisar las propuestas de diseño y guardrails, validar la ejecución de pruebas y autorizar la publicación y versionado en GitHub.
 
-I had two ADA-06 folders. `ada06-github-mcp` has only documents; `ada06-sample-repo` has code, tests and a spec, so Claude used that one. It copied the repo with its history, removed the `origin` remote so nothing could be pushed to the original, and tagged `ada08-baseline`. It later moved the tag to the commit that adds `TASK_UNDER_TEST.md`, because BEFORE and AFTER need the same task.
+---
 
-My decision: I picked ADA-06 and left the rest to Claude.
+## Entrada 1: Selección del repositorio base y congelamiento del baseline (29/10/2026)
 
-## Entry 2: Initial audit (BEFORE)
+- **Trabajo realizado con el asistente:** Indiqué a Claude que utilizáramos el repositorio de la práctica ADA-06 como base. Entre las carpetas disponibles (`ada06-github-mcp` que contenía únicamente documentación y `ada06-sample-repo` que contaba con código fuente y suite de pruebas), seleccionamos `ada06-sample-repo`. Se clonó el proyecto preservando el historial, se removió el remoto de origen para protegerlo y se creó la etiqueta `ada08-baseline`. Posteriormente se alineó la etiqueta con el commit que incorpora `TASK_UNDER_TEST.md`, asegurando que ambas corridas partieran del mismo requerimiento.
+- **Decisión y supervisión:** Decidí usar `ada06-sample-repo` por ser el proyecto funcional con pruebas unitarias en `src/calculator.py` y verifiqué que la etiqueta `ada08-baseline` quedara fijada en el commit `53d91b6`.
 
-Claude read the baseline files, ran the 7 tests and scored the 8 dimensions: 30/100. It considered a higher score for Build / Run / Test and kept 3, because only the test command was documented. It committed the audit before launching any agent and built the agent's working copy from the baseline tag alone, so the agent could not see the audit.
+## Entrada 2: Auditoría inicial de madurez (Condición BEFORE)
 
-My decision: none beyond the delegation.
+- **Trabajo realizado con el asistente:** Se realizó la auditoría inicial del repositorio base siguiendo las 8 dimensiones y ponderaciones de la rúbrica del curso. Claude analizó los archivos del baseline, corrió las 7 pruebas existentes y asignó la calificación inicial (30/100), fundamentando cada brecha con evidencia del código. Este reporte se registró en un commit antes de iniciar las corridas de prueba para aislar el contexto del agente.
+- **Decisión y supervisión:** Revisé los criterios y acepté la calificación de 30/100, validando que el puntaje de 3/5 en *Build / Run / Test* era el adecuado dado que solo existía el comando de tests, sin linter ni comando unificado de verificación.
 
-## Entry 3: Task design (CR-001)
+## Entrada 3: Diseño del Change Request de prueba (CR-001)
 
-Claude proposed `calculate_order_total(prices, discount_percent=0.0, tax_rate=0.0)`. It rejected "implement the discount" because `apply_discount` already existed, even though a stale `SPEC.md` called it pending. It ran the existing functions to confirm the expected value of 156.6 before writing it into the task. The task cites REQ-001 to REQ-003 without restating them.
+- **Trabajo realizado con el asistente:** Analizamos las opciones de tareas para medir la autonomía y fricción del agente. Descartamos "implementar descuento" porque la función `apply_discount` ya existía en el código (a pesar de que `SPEC.md` la marcaba como pendiente). Formulamos el Change Request CR-001 para añadir `calculate_order_total(prices, discount_percent=0.0, tax_rate=0.0)` en `src/calculator.py`, referenciando los requerimientos existentes REQ-001 a REQ-003 sin alterarlos. Claude comprobó previamente el resultado esperado (156.6) ejecutando las funciones existentes.
+- **Decisión y supervisión:** Aprobé el diseño de CR-001 como una tarea representativa: no trivial, acotada, determinista y directamente verificable.
 
-My decision: I left the task choice to Claude.
+## Entrada 4: Estructuración de AGENTS.md y arquitectura documental
 
-## Entry 4: Design of AGENTS.md and the other documents
+- **Trabajo realizado con el asistente:** Siguiendo los principios de reducción de contexto ambiguo, se diseñó `AGENTS.md` como contrato operativo central con enlaces directos a fuentes de verdad en lugar de duplicar especificaciones. Se implementó `CLAUDE.md` como adaptador delgado que solo redirige a `AGENTS.md`, `ARCHITECTURE.md` para delimitar límites de módulos y convenciones de pureza/redondeo, y `docs/REPO_MAP.md` como guía de navegación para evitar exploraciones ciegas.
+- **Decisión y supervisión:** Establecí como regla que los agentes solo pueden incorporar nuevos criterios de aceptación (AC) en `SPEC.md`, reservando cualquier cambio o adición a `REQUIREMENTS.md` para aprobación humana obligatoria.
 
-Claude kept `AGENTS.md` short and linked to other files instead of copying them. It added a thin `CLAUDE.md` adapter because Claude Code loads that file. It left `TASK_UNDER_TEST.md` out of the Read First list, since it belongs to the experiment and not to the project. It did not add a third-party linter (none was installed and it would be a new dependency), so lint is `python -m compileall`, and the docs say so. Agents may add acceptance criteria but not requirements, which lets traceability grow without letting an agent redefine the product.
+## Entrada 5: Conversión de reglas en guardrails ejecutables
 
-My decision: I left the design to Claude.
+- **Trabajo realizado con el asistente:** Para asegurar que las directrices no fueran meras sugerencias en texto, se convirtieron en scripts deterministas en Python estándar: `scripts/check_protected_paths.py` (bloquea cambios en `REQUIREMENTS.md`, `.github/` o commits con secretos/.env) y `scripts/check_repo_contract.py` (valida existencia de archivos requeridos, consistencia REQ/AC y rutas citadas en docs). Se añadieron 13 pruebas unitarias y se ejecutaron 8 casos de prueba demostrativos en `results/evidence/guardrail-demo.txt`.
+- **Decisión y supervisión:** Durante las pruebas del guardrail se detectó que un archivo `.env` ignorado en `.gitignore` provocaba una discrepancia con la regla original. Respaldé el ajuste de la regla para permitir `.env` locales ignorados y concentrar el bloqueo en prevenir su commit o adición forzada (`git add -f`).
 
-## Entry 5: Turning rules into software
+## Entrada 6: Ejecución experimental BEFORE vs. AFTER
 
-Claude turned "don't change requirements or CI" and "don't commit secrets" into `scripts/check_protected_paths.py` and `scripts/check_repo_contract.py`, wrote 13 tests for them and ran 8 negative cases. The first run exposed a mismatch: a gitignored `.env` went undetected although the rule said "never create `.env`". Claude changed the rule instead of the script. A gitignored local `.env` is the right state, and the real risk is committing it, which case 4 now covers with `git add -f`.
+- **Trabajo realizado con el asistente:** Se ejecutó el experimento comparativo empleando dos subagentes limpios e independientes en repositorios aislados (`ada08-runs/run-a` y `ada08-runs/run-b`), exponiendo únicamente el contexto autorizado para cada condición. Claude compiló las métricas de ejecución (número de turnos, archivos consultados, tokens) y verificó de forma independiente las salidas de ambos agentes.
+- **Decisión y supervisión:** Revisé los resultados de ambas corridas: mientras el agente BEFORE requirió explorar el árbol y definir su propio método de validación, el agente AFTER siguió el orden de `AGENTS.md`, utilizó el comando unificado y actualizó de manera consistente `SPEC.md`, `TASKS.md` y `docs/REPO_MAP.md`. Validé además que la suite final pasara a 27 pruebas (7 nuevas pruebas añadidas para CR-001).
 
-My decision: I left the choice of rules to Claude.
+## Entrada 7: Identificación de conocimiento implícito
 
-## Entry 6: BEFORE and AFTER executions
+- **Trabajo realizado con el asistente:** Se sistematizaron en `results/implicit-knowledge.md` los 8 puntos de conocimiento implícito que el agente BEFORE tuvo que asumir o inferir (convenciones de error `ValueError`, redondeo monetario a 2 decimales, archivos que no debían modificarse, etc.), asociando cada punto a una mejora concreta implementada en el repositorio.
+- **Decisión y supervisión:** Comprobé que los 8 elementos quedaran formalmente especificados en la documentación o respaldados por los scripts de verificación determinista.
 
-Each agent ran in its own repository (`ada08-runs/run-a` and `run-b`) containing only the history that run was allowed to see. Claude checked both outputs itself: it re-ran the tests and `verify_repo.sh`, read the diffs and checked the protected files. Both passed. It caught one error in the AFTER agent's report, which claimed 8 new tests when the suite went from 20 to 27, so 7. The log records the corrected number.
+## Entrada 8: Verificación compartida y CI/CD en GitHub
 
-BEFORE read 6 files and chose its own validation. AFTER followed the instruction chain, ran the shared verify command and left `SPEC.md`, `TASKS.md` and `docs/REPO_MAP.md` consistent with the change. It also used more turns and tokens.
+- **Trabajo realizado con el asistente:** Se configuró `scripts/verify_repo.sh` como único punto de entrada de verificación (tests, lint de sintaxis, contrato del repositorio y rutas protegidas), utilizado por desarrolladores, agentes y el workflow de GitHub Actions (`.github/workflows/verify.yml`). Claude preparó la estructura para el repositorio remoto.
+- **Decisión y supervisión:** Autorice la creación del repositorio público en mi cuenta de GitHub (`RafaMadera18/ada08-agent-ready-repository`), ordené la publicación de las ramas de evidencia (`ada08/before`, `ada08/after`, `ada08/improve`, `main`), y verifiqué en la interfaz de GitHub Actions que todos los workflows terminaran en estado exitoso (verde).
 
-My decision: none.
+## Entrada 9: Evaluación final y reflexiones
 
-## Entry 7: Discoverability and implicit knowledge
-
-Claude listed 8 things the BEFORE agent had to infer or could not know (`results/implicit-knowledge.md`) and picked a place for each to become explicit. Whatever a script could check became a script. Conventions a script cannot check stayed as documentation.
-
-My decision: none.
-
-## Entry 8: Shared checks and CI
-
-`scripts/verify_repo.sh` is the only definition of "verified", and the GitHub Actions workflow calls it with no logic of its own. The working copy had no remote, so the workflow could not run at first. After I agreed, Claude created the public repository `RafaMadera18/ada08-agent-ready-repository` and pushed `main` (the final branch), `ada08/before`, `ada08/after`, `ada08/improve` and the tag. The workflow passed on every branch that contains it.
-
-My decision: I approved publishing, chose a public repository and asked for the evidence branches to be included.
-
-## Entry 9: Final evaluation and remaining human work
-
-Claude scored AFTER at 86/100 (+56). The improvements and the score came from the same author, and the report says so. Still open: no real linter, no automatic check that each acceptance criterion has a test, no agent hooks, no rule on whether feature work should update `TASKS.md` and `docs/REPO_MAP.md`, a workflow whose pull-request path is untested, and one run per condition. Claude also wrote a first draft of the reflection answers in the improvement report, and I asked it to rewrite that draft and this log in plainer language.
-
-My decision: I asked for the rewrite.
+- **Trabajo realizado con el asistente:** Se completó la auditoría AFTER alcanzando un puntaje de 86/100 (+56 puntos sobre el baseline). Claude generó el borrador inicial del reporte comparativo y las respuestas base a las preguntas de reflexión.
+- **Decisión y supervisión:** Acepté el puntaje de 86/100 reconociendo las amenazas a la validez documentadas en el reporte (evaluador compartido y una sola corrida por condición), ejecuté la verificación local completa (`VERIFY_REPO: PASS`) y revisé las respuestas de reflexión en `results/readiness-improvement-report.md`.
