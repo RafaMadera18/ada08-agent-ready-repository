@@ -1,0 +1,54 @@
+# Guardrail demonstration (negative tests) on branch ada08/improve @ 82a149d
+# Each case changes the work tree, runs scripts/verify_repo.sh, then restores it.
+
+## Case 1: clean tree
+[4/4] Protected paths and forbidden files
+PROTECTED_PATHS: PASS
+VERIFY_REPO: PASS
+exit=0
+
+## Case 2: REQUIREMENTS.md is modified
+[4/4] Protected paths and forbidden files
+PROTECTED_PATHS: FAIL
+  - Protected path modified: REQUIREMENTS.md (M)
+Stop and ask a human. See Stop Conditions in AGENTS.md.
+exit=1
+
+## Case 3: a local .env exists but is gitignored (allowed)
+PROTECTED_PATHS: PASS
+VERIFY_REPO: PASS
+exit=0
+
+## Case 4: the same .env is force-added past .gitignore (blocked)
+warning: in the working copy of '.env', LF will be replaced by CRLF the next time Git touches it
+[2/4] Running lint (syntax check)
+[3/4] Repository contract
+REPO_CONTRACT: FAIL
+  - Sensitive file is versioned: .env
+exit=1
+
+## Case 5: a token-like string is added to a tracked file
+[2/4] Running lint (syntax check)
+[3/4] Repository contract
+REPO_CONTRACT: FAIL
+  - Possible secret in TASKS.md (pattern ghp_[A-Za-z0...)
+exit=1
+
+## Case 6: AGENTS.md points to a file that does not exist
+[2/4] Running lint (syntax check)
+[3/4] Repository contract
+REPO_CONTRACT: FAIL
+  - AGENTS.md points to a path that does not exist: docs/ghost.md
+exit=1
+
+## Case 7: human-approved override
+[4/4] Protected paths and forbidden files
+PROTECTED_PATHS: PASS (human approval override)
+  - approved: Protected path modified: REQUIREMENTS.md (M)
+VERIFY_REPO: PASS
+exit=0
+
+## Case 8: restored
+PROTECTED_PATHS: PASS
+VERIFY_REPO: PASS
+exit=0

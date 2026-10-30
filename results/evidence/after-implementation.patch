@@ -1,0 +1,123 @@
+﻿diff --git a/SPEC.md b/SPEC.md
+index 2c35c66..3f32313 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -33,7 +33,21 @@ Function: `apply_discount(subtotal: float, discount_percent: float) -> float`
+ | AC-003-1 | Returns `subtotal * (1 - discount_percent / 100)` rounded to 2 decimals. `(100.0, 10.0)` returns `90.0`, `(100.0, 0.0)` returns `100.0`, `(100.0, 100.0)` returns `0.0`. | `test_apply_discount_valid` |
+ | AC-003-2 | A discount below 0 or above 100 raises `ValueError`. | `test_apply_discount_invalid` |
+ | AC-003-3 | A negative subtotal raises `ValueError`. | `test_apply_discount_invalid` |
+-| AC-003-4 | When a discount and a tax rate are both applied, the discount is applied first and the tax is calculated on the discounted amount (from "before tax calculation" in REQ-003). | not covered by a test |
++| AC-003-4 | When a discount and a tax rate are both applied, the discount is applied first and the tax is calculated on the discounted amount (from "before tax calculation" in REQ-003). | `test_calculate_order_total_discount_then_tax` |
++
++## Order Total (combines REQ-001, REQ-002, REQ-003)
++
++Function: `calculate_order_total(prices: list[float], discount_percent: float = 0.0, tax_rate: float = 0.0) -> float`
++
++| ID | Criterion | Test |
++|---|---|---|
++| AC-001-4 | `calculate_order_total` with only prices returns the subtotal. `[10.5, 20.0, 5.25]` returns `35.75` and `[]` returns `0.0`. | `test_calculate_order_total_defaults`, `test_calculate_order_total_empty` |
++| AC-001-5 | A negative price passed to `calculate_order_total` raises `ValueError`. | `test_calculate_order_total_negative_price` |
++| AC-002-4 | `calculate_order_total` applies the tax rate to the discounted subtotal. `([100.0], 0.0, 0.16)` returns `116.0`. | `test_calculate_order_total_defaults` |
++| AC-002-5 | A negative tax rate passed to `calculate_order_total` raises `ValueError`. | `test_calculate_order_total_negative_tax_rate` |
++| AC-003-5 | `calculate_order_total([100.0, 50.0], 10.0, 0.16)` returns `156.6`; a 100% discount returns `0.0`. | `test_calculate_order_total_discount_then_tax`, `test_calculate_order_total_full_discount` |
++| AC-003-6 | A discount outside 0-100 passed to `calculate_order_total` raises `ValueError`. | `test_calculate_order_total_invalid_discount` |
++| AC-003-7 | `discount_percent` and `tax_rate` are optional and default to `0.0`. | `test_calculate_order_total_defaults` |
+ 
+ ## Conventions that apply to every criterion
+ 
+diff --git a/TASKS.md b/TASKS.md
+index a6b37d6..bde8f3b 100644
+--- a/TASKS.md
++++ b/TASKS.md
+@@ -8,4 +8,4 @@ Work items and their link to requirements. Requirements are defined only in `REQ
+ | T-002 | Tax application with input validation | REQ-002 | Done |
+ | T-003 | Percentage discount calculation | REQ-003 | Done |
+ | T-004 | Repository readiness for coding agents (ADA-08) | - | Done |
+-| CR-001 | Change request described in `TASK_UNDER_TEST.md` | REQ-001, REQ-002, REQ-003 | Planned |
++| CR-001 | Change request described in `TASK_UNDER_TEST.md` | REQ-001, REQ-002, REQ-003 | Done |
+diff --git a/docs/REPO_MAP.md b/docs/REPO_MAP.md
+index bee1f65..f536e07 100644
+--- a/docs/REPO_MAP.md
++++ b/docs/REPO_MAP.md
+@@ -4,7 +4,7 @@ Answers "where is what I need?". Rules live in `AGENTS.md`.
+ 
+ ## Entry Points
+ 
+-- `src/calculator.py` - the whole service: `calculate_subtotal`, `apply_discount`, `apply_tax`. There is no executable entry point; callers import these functions.
++- `src/calculator.py` - the whole service: `calculate_subtotal`, `apply_discount`, `apply_tax`, `calculate_order_total`. There is no executable entry point; callers import these functions.
+ 
+ ## Tests
+ 
+diff --git a/src/calculator.py b/src/calculator.py
+index 3d5a498..820b53b 100644
+--- a/src/calculator.py
++++ b/src/calculator.py
+@@ -25,3 +25,16 @@ def apply_tax(amount: float, tax_rate: float) -> float:
+     if tax_rate < 0:
+         raise ValueError("Tax rate cannot be negative")
+     return round(amount * (1.0 + tax_rate), 2)
++
++
++def calculate_order_total(
++    prices: list[float], discount_percent: float = 0.0, tax_rate: float = 0.0
++) -> float:
++    """Calculate the final order total.
++
++    The discount (0-100) is applied to the subtotal first; the tax rate is then
++    applied to the discounted amount.
++    """
++    subtotal = calculate_subtotal(prices)
++    discounted = apply_discount(subtotal, discount_percent)
++    return apply_tax(discounted, tax_rate)
+diff --git a/tests/test_calculator.py b/tests/test_calculator.py
+index 1980526..50eafad 100644
+--- a/tests/test_calculator.py
++++ b/tests/test_calculator.py
+@@ -1,5 +1,10 @@
+ import unittest
+-from src.calculator import calculate_subtotal, apply_discount, apply_tax
++from src.calculator import (
++    calculate_subtotal,
++    apply_discount,
++    apply_tax,
++    calculate_order_total,
++)
+ 
+ 
+ class TestCalculator(unittest.TestCase):
+@@ -35,6 +40,35 @@ class TestCalculator(unittest.TestCase):
+         with self.assertRaises(ValueError):
+             apply_tax(100.0, -0.16)
+ 
++    def test_calculate_order_total_discount_then_tax(self):
++        self.assertEqual(calculate_order_total([100.0, 50.0], 10.0, 0.16), 156.6)
++
++    def test_calculate_order_total_defaults(self):
++        self.assertEqual(calculate_order_total([10.5, 20.0, 5.25]), 35.75)
++        self.assertEqual(calculate_order_total([100.0], discount_percent=10.0), 90.0)
++        self.assertEqual(calculate_order_total([100.0], tax_rate=0.16), 116.0)
++
++    def test_calculate_order_total_empty(self):
++        self.assertEqual(calculate_order_total([]), 0.0)
++        self.assertEqual(calculate_order_total([], 10.0, 0.16), 0.0)
++
++    def test_calculate_order_total_full_discount(self):
++        self.assertEqual(calculate_order_total([100.0], 100.0, 0.16), 0.0)
++
++    def test_calculate_order_total_negative_price(self):
++        with self.assertRaises(ValueError):
++            calculate_order_total([10.0, -5.0])
++
++    def test_calculate_order_total_invalid_discount(self):
++        with self.assertRaises(ValueError):
++            calculate_order_total([100.0], -1.0)
++        with self.assertRaises(ValueError):
++            calculate_order_total([100.0], 100.5)
++
++    def test_calculate_order_total_negative_tax_rate(self):
++        with self.assertRaises(ValueError):
++            calculate_order_total([100.0], 0.0, -0.16)
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
