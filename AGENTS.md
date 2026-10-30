@@ -46,8 +46,8 @@ Run everything from the repository root. Python 3.9 or newer, standard library o
 - Do not add dependencies without justification.
 - You may add acceptance criteria (AC-xxx-y) to `SPEC.md` for an existing REQ-xxx. Adding or editing a REQ-xxx needs human approval.
 - Do not modify protected paths: `REQUIREMENTS.md`, `generated/`, `.github/workflows/`.
-- Never create or commit `.env` files, keys or credentials.
-- `scripts/check_protected_paths.py` enforces the two rules above. Only a human may set `HUMAN_APPROVED_PROTECTED_CHANGE=1`.
+- Never commit `.env` files, keys or credentials, and never force-add them past `.gitignore`.
+- `scripts/check_protected_paths.py` enforces the protected paths and the forbidden files rule (staged or unignored). `scripts/check_repo_contract.py` rejects versioned secrets. Only a human may set `HUMAN_APPROVED_PROTECTED_CHANGE=1`.
 
 ## Stop Conditions
 
