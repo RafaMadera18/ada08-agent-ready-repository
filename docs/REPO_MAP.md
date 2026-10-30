@@ -4,7 +4,7 @@ Answers "where is what I need?". Rules live in `AGENTS.md`.
 
 ## Entry Points
 
-- `src/calculator.py` - the whole service: `calculate_subtotal`, `apply_discount`, `apply_tax`. There is no executable entry point; callers import these functions.
+- `src/calculator.py` - the whole service: `calculate_subtotal`, `apply_discount`, `apply_tax`, `calculate_order_total`. There is no executable entry point; callers import these functions.
 
 ## Tests
 
